@@ -3,66 +3,22 @@
 //
 
 #include <limits>
-#include "headers/raytracing.h"
+#include "raytracing.h"
 
-//Overload + operator for vectors
-template <typename T>
-inline std::vector<T> operator+(std::vector<T> x,std::vector<T> y){
-    if(x.size()==y.size()){
-        std::vector<T> z (x.size(),0.);
-        for(int i=0; i<x.size(); i++){
-            z[i] = x[i] + y[i];
-        }
-        return z;
-    }else{
-        std::cout << "Vectors x and y must be the same size."<<std::endl;
-        std::exit(EXIT_FAILURE);
-    }
-}
 
-template <typename T>
-inline std::vector<T> operator-(std::vector<T> x,std::vector<T> y){
-    if(x.size()==y.size()){
-        std::vector<T> z (x.size(),0.);
-        for(int i=0; i<x.size(); i++){
-            z[i] = x[i] - y[i];
-        }
-        return z;
-    }else{
-        std::cout << "Vectors x and y must be the same size."<<std::endl;
-        std::exit(EXIT_FAILURE);
-    }
-}
 
-template <typename T>
-inline std::vector<T> operator/(std::vector<T> x, double a){
-    std::vector<T> z (x.size(),0.);
-    for(int i=0; i<x.size(); i++){
-        z[i] = x[i]/a;
-    }
-    return z;
-}
 
-template <typename T>
-inline std::vector<T> operator*( double a, std::vector<T> x){
-    std::vector<T> z (x.size(),0.);
-    for(int i=0; i<x.size(); i++){
-        z[i] = x[i]*a;
-    }
-    return z;
-}
-
-//For the string input
-template <typename MyType>
-std::vector<MyType> String_to_Vector (std::string line){
-    std::istringstream iss(line);
-    std::vector<MyType> numbers;
-    MyType T;
-    while (iss >> T ){
-        numbers.push_back( T );
-    }
-    return numbers;
-}
+////For the string input
+//template <typename MyType>
+//std::vector<MyType> String_to_Vector (std::string line){
+//    std::istringstream iss(line);
+//    std::vector<MyType> numbers;
+//    MyType T;
+//    while (iss >> T ){
+//        numbers.push_back( T );
+//    }
+//    return numbers;
+//}
 
 
 void raytrace (std::vector<Ray> rays, Mesh &mesh){

@@ -2,55 +2,7 @@
 // Created by jmo510 on 06/06/18.
 //
 
-#include "headers/voxels.h"
-
-
-//Overload + operator for vectors
-template <typename T>
-inline std::vector<T> operator+(std::vector<T> x,std::vector<T> y){
-    if(x.size()==y.size()){
-        std::vector<T> z (x.size(),0.);
-        for(int i=0; i<x.size(); i++){
-            z[i] = x[i] + y[i];
-        }
-        return z;
-    }else{
-        std::cout << "Vectors x and y must be the same size."<<std::endl;
-        std::exit(EXIT_FAILURE);
-    }
-}
-
-template <typename T>
-inline std::vector<T> operator-(std::vector<T> x,std::vector<T> y){
-    if(x.size()==y.size()){
-        std::vector<T> z (x.size(),0.);
-        for(int i=0; i<x.size(); i++){
-            z[i] = x[i] - y[i];
-        }
-        return z;
-    }else{
-        std::cout << "Vectors x and y must be the same size."<<std::endl;
-        std::exit(EXIT_FAILURE);
-    }
-}
-
-template <typename T>
-inline std::vector<T> operator/(std::vector<T> x, double a){
-    std::vector<T> z (x.size(),0.);
-    for(int i=0; i<x.size(); i++){
-        z[i] = x[i]/a;
-    }
-    return z;
-}
-
-template <typename T>
-inline std::vector<T> operator*( double a, std::vector<T> x){
-    std::vector<T> z (x.size(),0.);
-    for(int i=0; i<x.size(); i++){
-        z[i] = x[i]*a;
-    }
-    return z;
-}
+#include "voxels.h"
 
 voxel_grid create_voxel_grid(std::vector<double> grid_center, double x_width, double y_width, double z_width, int nVoxels) {
 

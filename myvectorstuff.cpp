@@ -1,27 +1,6 @@
-#include "headers/myvectorstuff.h"
+#include "myvectorstuff.h"
 
-//Overload + operator for vectors
-template <typename T>
-inline std::vector<T> operator+(std::vector<T> x,std::vector<T> y){
-  return std::vector<T> {x[0]+y[0],x[1]+y[1], x[2]+y[2]};
-}
 
-template <typename T>
-inline std::vector<T> operator-(std::vector<T> x,std::vector<T> y){
-  return std::vector<T> {x[0]-y[0],x[1]-y[1], x[2]-y[2]};
-}
-
-//matrix mul a vector//
-template <typename T>
-inline std::vector<T> operator*(std::vector< std::vector<T> > M, std::vector<T> v){
-  std::vector<T> result (v.size(),0.);
-  for(int j=0; j<v.size(); j++){
-    for (int i=0; i<v.size(); i++){
-      result[j] += M[j][i]*v[i];
-    }
-  }
- return result;
-}
 
 double dot(std::vector<double> x, std::vector<double> y) {
     return x[0]*y[0] + x[1]*y[1] + x[2]*y[2];

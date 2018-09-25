@@ -1,67 +1,23 @@
 //Mesh Class implementation
 #include <limits>
-#include "headers/Mesh.h"
-
-//Overload + operator for vectors
-template <typename T>
-inline std::vector<T> operator+(std::vector<T> x,std::vector<T> y){
-  if(x.size()==y.size()){
-    std::vector<T> z (x.size(),0.);
-    for(int i=0; i<x.size(); i++){
-      z[i] = x[i] + y[i];
-    }
-    return z;
-  }else{
-    std::cout << "Vectors x and y must be the same size."<<std::endl;
-    std::exit(EXIT_FAILURE);
-  }
-}
-
-template <typename T>
-inline std::vector<T> operator-(std::vector<T> x,std::vector<T> y){
-  if(x.size()==y.size()){
-    std::vector<T> z (x.size(),0.);
-    for(int i=0; i<x.size(); i++){
-      z[i] = x[i] - y[i];
-    }
-    return z;
-  }else{
-    std::cout << "Vectors x and y must be the same size."<<std::endl;
-    std::exit(EXIT_FAILURE);
-  }
-}
-
-template <typename T>
-inline std::vector<T> operator/(std::vector<T> x, double a){
-  std::vector<T> z (x.size(),0.);
-  for(int i=0; i<x.size(); i++){
-    z[i] = x[i]/a;
-  }
-  return z;
-}
-
-template <typename T>
-inline std::vector<T> operator*( double a, std::vector<T> x){
-  std::vector<T> z (x.size(),0.);
-  for(int i=0; i<x.size(); i++){
-    z[i] = x[i]*a;
-  }
-  return z;
-}
+#include "Mesh.h"
 
 
-//For the string input
-template <typename MyType>
-std::vector<MyType> String_to_Vector (std::string line){
-  std::istringstream iss(line);
-  std::vector<MyType> numbers;
-  MyType T;
-  while (iss >> T ){
-    numbers.push_back( T );
-  }
-  return numbers;
-}
 
+
+////For the string input
+//template <typename MyType>
+//std::vector<MyType> String_to_Vector (std::string line){
+//  std::istringstream iss(line);
+//  std::vector<MyType> numbers;
+//  MyType T;
+//  while (iss >> T ){
+//    numbers.push_back( T );
+//  }
+//  return numbers;
+//}
+
+// Calculate the area of a triangular face
 inline double areaFace(Mesh::Face face){
   std::vector<double> a,b;
   std::vector<double> cross (3,0.);
@@ -88,6 +44,7 @@ inline std::vector<double> cross_product(std::vector<double> x, std::vector<doub
   return result;
 }
 
+// Custom print of a vector
 template <typename T>
 void vector_print(std::vector<T> x){
   for(int i=0; i<x.size(); i++){
@@ -98,6 +55,7 @@ void vector_print(std::vector<T> x){
 }
 //************************ Mesh Class implementation ************************//
 
+// Mesh init implementation
 Mesh::Mesh (std::string name, bool self_vf, bool opaque, double const_power_per_face){
   this->name = name;
   this->opaque = opaque;
@@ -105,17 +63,26 @@ Mesh::Mesh (std::string name, bool self_vf, bool opaque, double const_power_per_
   this->self_vf=self_vf;
 }
 
-//Basko values are for the scaling model.
+/* Create the meshes for the simulation from a file produced via a python script acting
+ * on a mesh from Blender. (Include this script for ease-of-use)
+ *
+ */
+                //Basko values are for the scaling model.
+
 void Mesh::CreateFromBlender(std::string filename, voxel_grid& Voxel_grid, double albedo , double basko_k , double basko_a , double basko_b){
+  // Vectors to store the data for the meshes
   std::vector< std::vector<double> > vertices;
   std::vector< std::vector<int> > faceIndexes;
   std::vector< std::vector<double> > normals;
+  // Variables required for reading from file
   std::string line;
   std::ifstream myfile (filename);
   bool isFirstLine = true;
-  //Metadata
+
   double min_area=std::numeric_limits <double> ::  max ();
 
+  // Open the file and look through lines
+  //Edit the following to change the desired mesh file format
   if(myfile.is_open()){
     while ( getline (myfile, line)){
       if(isFirstLine){
@@ -179,7 +146,7 @@ void Mesh::CreateFromBlender(std::string filename, voxel_grid& Voxel_grid, doubl
     F.k = basko_k;
 
     F.normal = normals[i];
-    //F.vertices.push_back( std::vector<double> () );
+
     for(int j=0; j<faceIndexes[i].size(); j++){
       F.vertices.push_back( vertices[faceIndexes[i][j]] );
     }
@@ -188,7 +155,7 @@ void Mesh::CreateFromBlender(std::string filename, voxel_grid& Voxel_grid, doubl
     F.areaCut = F.area;
     this->faces.push_back( F );
 
-      //Assign as member to a voxel
+      //Assign as member to a voxel (- Voxels are use to speed up the ray-tracing later)
     //Center of face used to see which voxel center is closer
       std::vector<double> centroid {(this->faces[i].vertices[0][0]+this->faces[i].vertices[1][0]+this->faces[i].vertices[2][0])/3.0,
                           (this->faces[i].vertices[0][1]+this->faces[i].vertices[1][1]+this->faces[i].vertices[2][1])/3.0,
@@ -207,6 +174,11 @@ void Mesh::CreateFromBlender(std::string filename, voxel_grid& Voxel_grid, doubl
   this->min_area = min_area;
 }
 
+/*
+ * The main solver for computing the VF between two surfaces
+ * Employs the contour integral method over the double area integral method for increased performance
+ * and accuracy.
+ */
 //Employs minimum distance min_dist to account for log(0)
 void Mesh::viewfactor(Mesh &mesh){
   //Create the vfObject in this->
@@ -222,27 +194,32 @@ void Mesh::viewfactor(Mesh &mesh){
   std::vector<double> g2(3,0.);//the side lengths
   double m; //mid-point distance
   double sum;
+
   //Self-shadowing variables
   std::vector<double> x;//Vector for self_shadowing inline calculation
-
-    std::vector< std::vector<double> > dummyverts (3,
+  std::vector< std::vector<double> > dummyverts (3,
     std::vector<double>(3,0.));
-    std::vector<int> rs (3,0);//Resegmenting array
-    std::vector<double> r1 (3,0.);
-    std::vector<double> p1(3, 0.), p2(3, 0.);
-    double areaCut; //For when the face is cut
+  std::vector<int> rs (3,0);//Resegmenting array
+  std::vector<double> r1 (3,0.);
+  std::vector<double> p1(3, 0.), p2(3, 0.);
+  // Faces can block their own vision of other faces, this 'cut area' accounts for this.
+  double areaCut;
 
+    // Main face loop
     for(unsigned int i=0; i<this->numberFaces; i++){
       for(unsigned int j=0; j<mesh.numberFaces; j++){
-        //NNOTE::Try this as a multiplication factor to see if it is faster.
         if(dot(this->faces[i].normal,mesh.faces[j].normal)<=0){
           //Default case
           dummyverts = mesh.faces[j].vertices;
-          areaCut = mesh.faces[j].area;//JUst to be sure
+          //AreaCut is equal to the entire face area until cut (obs)
+          areaCut = mesh.faces[j].area;
 
+          // We need to find which face of the two being considered
+          // in this step of the calculation is cut by the other
           bool mesh1_cut = false;
           bool mesh2_cut = false;
 
+          //The 'g's are the vectors pointing around the face (they form the contour)
           g1[0]= this->faces[i].vertices[1]-this->faces[i].vertices[0];
           g1[1]= this->faces[i].vertices[2]-this->faces[i].vertices[1];
           g1[2]= this->faces[i].vertices[0]-this->faces[i].vertices[2];

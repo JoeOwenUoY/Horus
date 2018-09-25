@@ -1,5 +1,7 @@
-/* Main code for the C++ version of the FORTRAN HOHVF
-- Joe Owen
+/* Horus - C++ 3D View Factor Code with albedo scaling and ray-tracing modelled laser deposition
+- Joe Owen, University of York
+ Supervisors: John Pasley, Chris Ridgers
+
 */
 
 #include <iostream>
@@ -10,35 +12,33 @@
 #include <time.h>
 #include <iomanip> //for setprecision
 
-#include "headers/Mesh.h"
-#include "headers/raytracing.h"
-#include "headers/radiosity.h"
-#include "headers/voxels.h"
+#include "Mesh.h"
+#include "raytracing.h"
+#include "radiosity.h"
+#include "voxels.h"
+
 
 double ray_power_global=1;
-
-std::vector<double> operator+(std::vector<double> x,std::vector<double> y){
-  return std::vector<double> {x[0]+y[0],x[1]+y[1], x[2]+y[2]};
-}
-
-//For the string input
-template <typename MyType>
-std::vector<MyType> String_to_Vector (std::string line){
-    std::istringstream iss(line);
-    std::vector<MyType> numbers;
-    MyType T;
-    while (iss >> T ){
-        numbers.push_back( T );
-    }
-    return numbers;
-}
-
+/* Scene class definition -
+ * The scene consists of
+ * - The meshes partaking in the view-factor (VF) calculation and subsequent
+ * radiosity calculations.
+ * - Any meshes specified as being blocking meshes (opaque). This is in the sense that
+ * they block the meshes from each other, or themselves, during the VF calculation. Carefule selection
+ * of these can increase simulation speed (geometry dependant).
+ * - Rays are one method of setting initial conditions and time dependant sources of the simulation meshes.
+ * They can be used as laser cones, point sources, etc depending on how the records are specified.
+ */
 class Scene{
 public:
+    //Vector spaces for the scene constiuents
     std::vector<Mesh> meshes;
     std::vector<Mesh> blocking_meshes;
     std::vector<Ray> rays;
+
+    //Overload [] to index elements of the scene by given 'name'.
     Mesh& operator[] (std::string name){
+        //Search in 'Meshes' and 'Blocking Meshes'
       for(int i=0; i<meshes.size(); i++){
         if(meshes[i].name==name){return meshes[i];}
       }
@@ -49,7 +49,9 @@ public:
     }
 };
 
-
+// A simple way to save the initial source data of the mesh after it as been calculated
+// via ray-tracing. Could be used to run multiple simulations withthe same geometry and source irradiation conditions.
+// A separate time history of the sources can be specified so this works.
 void saveSourcedata(Mesh mesh){
         std::ofstream save("./source_" + mesh.name + ".save");
 
@@ -62,6 +64,8 @@ void saveSourcedata(Mesh mesh){
     return;
 }
 
+// Not currently working
+//Loads the source data for the mesh by looking for a file with the name structure "source_"+mesh.name+".save"
 void loadSourcedata(Mesh mesh){
     std::ifstream load ("./source_"+ mesh.name + ".save");
     std::string line;
@@ -81,7 +85,7 @@ void loadSourcedata(Mesh mesh){
     return;
 }
 
-
+// Save the View Factor matrices for a single mesh to all of its visible meshes in a text format.
 void saveVFdata(Mesh mesh){
     for (int k=0; k<mesh.vf_database.content.size(); k++) {
         std::ofstream save("./vf_" + mesh.name + "_" + mesh.vf_database.content[k].otherMesh + ".save");
@@ -99,6 +103,9 @@ void saveVFdata(Mesh mesh){
     return;
 }
 
+//Load the View Factor matrices for a mesh, given the same geometry and mesh as when the VFs were initially calculated.
+// It is up to the user to organise save files correctly as there is not yet precautions in place to keep track
+// of whether the files loaded correspond to the current runs input files / meshes.
 void loadVFdata(Mesh &mesh, Mesh othermesh){
     std::ifstream load ("./vf_"+mesh.name+"_"+othermesh.name+".save");
     Mesh::vfObject V (mesh.numberFaces, othermesh.numberFaces, othermesh.name);
@@ -118,6 +125,7 @@ void loadVFdata(Mesh &mesh, Mesh othermesh){
     return;
 }
 
+// Loads the time history data from a given filename
 std::vector< std::vector<double> > loadTVdata(std::string filename){
     std::ifstream load ("./"+filename);
     std::vector< std::vector<double> > tv_record;
@@ -132,8 +140,11 @@ std::vector< std::vector<double> > loadTVdata(std::string filename){
     return tv_record;
 }
 
+// An array of strings that are options to the program on the command line
 const std::string cmd_options[] = {"-h","-m","-r","-b","-mb","-ms",""};
 
+/* The main program body */
+/* ................................................................................................... */
 int main(int argc, char* argv[]) {
     //Initialise the voxel grid into main for creation within the following user input stage
     voxel_grid Voxel_grid = create_voxel_grid(std::vector<double>{0.,0.,0.},1,1,1,1);

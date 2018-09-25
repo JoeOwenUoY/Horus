@@ -7,7 +7,7 @@
 
 
 #include <cmath>
-#include "headers/Mesh.h"
+#include "Mesh.h"
 
 double flux_convergence (double, double, double, double, double, double);
 

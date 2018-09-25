@@ -5,12 +5,9 @@
 #ifndef HVFC_VOXELS_H
 #define HVFC_VOXELS_H
 
-#include <iostream>
-#include <vector>
-#include <string>
-#include <numeric>
-#include <cmath>
 #include <fstream>
+#include "myvectorstuff.h"
+
 
 //Quantize 3D space into 'voxels'
 //A single voxel has its own dimensions and a list of meshes who have faces inside it as well

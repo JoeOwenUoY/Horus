@@ -2,35 +2,9 @@
 // Created by joseph on 07/05/18.
 //
 
-#include "headers/radiosity.h"
-
-inline double convergence(Mesh mesh) {
-    double max_difference = 0;
-    for (int i = 0; i<mesh.faces.size(); i++){
-        max_difference = (max_difference < fabs(mesh.faces[i].starting_power-mesh.faces[i].power))?fabs(mesh.faces[i].starting_power-mesh.faces[i].power):
-                         max_difference;
-    }
-    //std::cout << mesh.name<<": "<<max_difference <<std::endl;
-    return max_difference;
-}
-
-inline double convergence_Sext(Mesh mesh) {
-    double max_difference = 0;
-    for (int i = 0; i<mesh.faces.size(); i++){
-        max_difference = (max_difference < fabs(mesh.faces[i].Sext_previous-mesh.faces[i].Sext))?fabs(mesh.faces[i].Sext_previous-mesh.faces[i].Sext):
-                         max_difference;
-    }
-    //std::cout << mesh.name<<": "<<max_difference <<std::endl;
-    return max_difference;
-}
+#include "radiosity.h"
 
 
-inline bool global_convergence (std::vector<Mesh> scene) {
-    for (int i=0; i<scene.size(); i++){
-        if(!scene[i].radiosity_converged){return false;}
-    }
-    return true;
-}
 
 //Solves the radiosity equation between two meshes
 //Function will be modifying the Mesh::faces[].power variable
