@@ -376,8 +376,8 @@ void time_dependent_solveRadiosity (Mesh &mesh1, Mesh &mesh2, std::vector< std::
 
 
 
-    saveMeshData(mesh1,1);
-    saveMeshData(mesh2,1);
+    saveMeshData(mesh1,1,tv_record[0][0]);
+    saveMeshData(mesh2,1,tv_record[0][0]);
 
     // ########### START OF TIMESTEP ###############
 
@@ -605,9 +605,9 @@ void time_dependent_solveRadiosity (Mesh &mesh1, Mesh &mesh2, std::vector< std::
                                                      mesh2.faces[i].a, mesh2.faces[i].b, mesh2.faces[i].albedo);
         }
 
-
-        saveMeshData(mesh1, timestep+1);
-        saveMeshData(mesh2, timestep+1);
+        // timestep + 1 because of how VisIt reads in files
+        saveMeshData(mesh1, timestep+1, tv_record[timestep][0]);
+        saveMeshData(mesh2, timestep+1, tv_record[timestep][0]);
 
         // ########### END OF TIMESTEP ###############
 

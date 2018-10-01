@@ -894,7 +894,7 @@ Mesh::vfObject::vfObject(int n, int m, std::string otherMesh, double default_val
 
 
 
-void saveMeshData(Mesh mesh, int timestep ) {
+void saveMeshData(Mesh mesh, int timestep, double realtime ) {
   std::ofstream save ("./pwsrc_"+mesh.name+"_"+std::to_string(timestep)+".vtk");
   save << "# vtk DataFile Version 2.0"<< std::endl;
   save << mesh.name +"\nASCII\nDATASET POLYDATA"<<std::endl;
@@ -938,6 +938,27 @@ void saveMeshData(Mesh mesh, int timestep ) {
 
 
   save.close();
+    //*******************  Save Average albedo over time  *********
+    std::ofstream save2 ("./albedo_vs_t_"+mesh.name+".txt");
+    double total=0.;
+    save2 << mesh.name+"\n# time(s)  average albedo\n";
+    for (int i = 0; i < mesh.faces.size(); i++){
+      total += mesh.faces[i].albedo;
+    }
+    save2 << realtime <<" "<< total/mesh.faces.size() << std::endl;
+
+    save2.close();
+
+  //*******************  Save Average Tr over time  *********
+  std::ofstream save3 ("./Tr_vs_t_"+mesh.name+".txt");
+  total=0.;
+  save3 << mesh.name+"\n# time(s)  average albedo\n";
+  for (int i = 0; i < mesh.faces.size(); i++){
+    total += sqrt(sqrt(mesh.faces[i].power/(5.67e-8)))/(11604.5250061657);
+  }
+  save3 << realtime <<" "<< total/mesh.faces.size() << std::endl;
+
+  save3.close();
 }
 
 //************************ Scene Class implementation ************************//

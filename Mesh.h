@@ -91,7 +91,7 @@ class Mesh {
     //std::vector<int> findinVolume(std::vector<double> origin[3], double width);
 };
 
-void saveMeshData(Mesh mesh, int timestep = 0);
+void saveMeshData(Mesh mesh, int timestep = 0, double realtime = 0.);
 double areaFace(Mesh::Face);
 
 #endif
